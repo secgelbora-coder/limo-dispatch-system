@@ -34,12 +34,12 @@ export default function AdminPage() {
     setDrivers([...drivers, newDriver]);
     setNewDriverName("");
     setNewDriverPhone("");
-    alert("Yeni sürücü eklendi!");
+    alert("New driver added successfully!");
   };
 
   const sendDriverSMS = (rideId, phone) => {
     const link = `https://blueprintel.com/driver?rideId=${rideId}`;
-    alert(`SMS gönderildi: ${phone}\nTakip Linki: ${link}`);
+    alert(`SMS Sent to: ${phone}\nTracking Link: ${link}`);
   };
 
   return (
@@ -49,18 +49,18 @@ export default function AdminPage() {
       <hr style={{ margin: '20px 0' }} />
 
       <div style={{ backgroundColor: '#f9f9f9', border: '1px solid #e0e0e0', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-        <h3>Yeni Sürücü Ekle</h3>
+        <h3>Add New Driver</h3>
         <form onSubmit={handleAddDriver} style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
           <input 
             type="text" 
-            placeholder="Sürücü Adı" 
+            placeholder="Driver Name" 
             value={newDriverName} 
             onChange={(e) => setNewDriverName(e.target.value)}
             style={{ padding: '10px', flex: '1', borderRadius: '4px', border: '1px solid #ccc' }}
           />
           <input 
             type="text" 
-            placeholder="Telefon Numarası" 
+            placeholder="Phone Number" 
             value={newDriverPhone} 
             onChange={(e) => setNewDriverPhone(e.target.value)}
             style={{ padding: '10px', flex: '1', borderRadius: '4px', border: '1px solid #ccc' }}
@@ -69,21 +69,21 @@ export default function AdminPage() {
             type="submit" 
             style={{ padding: '10px 20px', backgroundColor: '#0070f3', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
           >
-            Ekle
+            Add Driver
           </button>
         </form>
       </div>
 
       <div style={{ border: '1px solid #ccc', borderRadius: '8px', padding: '20px' }}>
-        <h3>Canlı Sürücü & Rota Takibi</h3>
+        <h3>Live Dispatch & Ride Monitor</h3>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', marginTop: '15px' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid #ddd' }}>
               <th style={{ padding: '10px' }}>Ride ID</th>
-              <th style={{ padding: '10px' }}>Yolcu</th>
-              <th style={{ padding: '10px' }}>Atanan Sürücü</th>
-              <th style={{ padding: '10px' }}>Durum</th>
-              <th style={{ padding: '10px' }}>İşlem</th>
+              <th style={{ padding: '10px' }}>Passenger</th>
+              <th style={{ padding: '10px' }}>Assigned Driver</th>
+              <th style={{ padding: '10px' }}>Status</th>
+              <th style={{ padding: '10px' }}>Action</th>
             </tr>
           </thead>
           <tbody>
@@ -109,7 +109,7 @@ export default function AdminPage() {
                     onClick={() => sendDriverSMS(ride.id, ride.driverPhone)}
                     style={{ padding: '6px 12px', cursor: 'pointer', backgroundColor: '#111', color: '#fff', border: 'none', borderRadius: '4px' }}
                   >
-                    SMS Link Gönder
+                    Send SMS Link
                   </button>
                 </td>
               </tr>

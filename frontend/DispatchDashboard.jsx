@@ -4,13 +4,13 @@ export default function DispatchDashboard() {
   const [trips, setTrips] = useState([
     {
       id: "41711",
-      passengerName: "Ed Butera",
-      passengerPhone: "(561) 706-1976",
-      pickup: "1050 NW 1st Ave, Boca Raton, FL",
+      passengerName: "Bora Secgel",
+      passengerPhone: "(561) 601-8721",
+      pickup: "1041 nw 2nd ave FortLauderdale, FL",
       dropoff: "FLL Airport",
-      driver: "John Doe",
+      driver: "Hakan Alp",
       status: "On The Way",
-      assignedAffiliate: "Slade Services",
+      assignedAffiliate: "KU23N",
       lastGps: "26.358, -80.083"
     }
   ]);

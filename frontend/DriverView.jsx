@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 export const COMPANY_DETAILS = {
   companyName: "Blueprintel",
@@ -9,51 +9,51 @@ export const COMPANY_DETAILS = {
   phone: "561-601-8721"
 };
 
-export const DriverView = ({ bookingData }) => {
-  const [userLocation, setUserLocation] = useState(null);
+export const DriverView = ({ rideId = "BP-1001" }) => {
+  const [rideStatus, setRideStatus] = useState('Assigned');
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          });
-        },
-        (error) => {
-          console.warn("Geolocation access denied or unavailable:", error.message);
-        }
-      );
-    }
-  }, []);
-
-  const activeBooking = bookingData || {
-    bookingId: "BP-9082",
-    clientName: "Private Client",
-    pickupAddress: "Fort Lauderdale Airport (FLL)",
-    dropoffAddress: COMPANY_DETAILS.address,
-    contactPhone: COMPANY_DETAILS.phone,
-    providerCompany: COMPANY_DETAILS.companyName
+  const updateStatus = (newStatus) => {
+    setRideStatus(newStatus);
+    // Buradan dilerseniz backend API'nize veya WebSocket/Supabase servisinize status güncellendi bilgisini atabilirsiniz.
   };
 
   return (
-    <div className="driver-view-card" style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px', fontFamily: 'Arial, sans-serif' }}>
-      <h3>{activeBooking.providerCompany} - Driver Assignment Panel</h3>
-      <hr />
-      <div className="booking-details">
-        <p><strong>Booking ID:</strong> {activeBooking.bookingId}</p>
-        <p><strong>Passenger Name:</strong> {activeBooking.clientName}</p>
-        <p><strong>Pickup Location:</strong> {activeBooking.pickupAddress}</p>
-        <p><strong>Destination:</strong> {activeBooking.dropoffAddress}</p>
-        <p><strong>Dispatch Contact:</strong> {activeBooking.contactPhone}</p>
-      </div>
+    <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+      <div style={{ border: '1px solid #ddd', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
+        <h2 style={{ color: '#111', marginBottom: '5px' }}>{COMPANY_DETAILS.companyName}</h2>
+        <p style={{ color: '#666', fontSize: '14px', marginTop: '0' }}>Driver Job Status Panel</p>
+        <hr style={{ border: '0.5px solid #eee', margin: '15px 0' }} />
 
-      {userLocation && (
-        <div className="location-status" style={{ marginTop: '15px', color: '#28a745' }}>
-          <small>Current Position: {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}</small>
+        <div style={{ marginBottom: '15px' }}>
+          <p><strong>Ride ID:</strong> {rideId}</p>
+          <p><strong>Passenger Address:</strong> {COMPANY_DETAILS.address}</p>
+          <p><strong>Dispatch Contact:</strong> {COMPANY_DETAILS.phone}</p>
+          <p><strong>Current Status:</strong> <span style={{ color: '#0070f3', fontWeight: 'bold' }}>{rideStatus}</span></p>
         </div>
-      )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
+          <button 
+            onClick={() => updateStatus('OTW')}
+            style={{ padding: '12px', backgroundColor: rideStatus === 'OTW' ? '#0051a8' : '#0070f3', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            OTW (On The Way)
+          </button>
+
+          <button 
+            onClick={() => updateStatus('On Location')}
+            style={{ padding: '12px', backgroundColor: rideStatus === 'On Location' ? '#d97706' : '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            On Location
+          </button>
+
+          <button 
+            onClick={() => updateStatus('Done')}
+            style={{ padding: '12px', backgroundColor: rideStatus === 'Done' ? '#15803d' : '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            Done
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

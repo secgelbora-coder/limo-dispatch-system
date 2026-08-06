@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { useRouter } from 'next/router';
+'use client';
 
-export default function Home() {
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation'; // Use 'next/router' if using Pages Router
+
+export default function HomePage() {
   const router = useRouter();
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   const [password, setPassword] = useState('');
@@ -56,13 +58,13 @@ export default function Home() {
                 cursor: 'pointer'
               }}
             >
-              Admin Paneli
+              Admin Panel
             </button>
           ) : (
             <form onSubmit={handleAdminAccess} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <input 
                 type="password"
-                placeholder="Şifre giriniz"
+                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{
@@ -74,7 +76,7 @@ export default function Home() {
                   textAlign: 'center'
                 }}
               />
-              {error && <small style={{ color: '#ef4444' }}>Hatalı şifre! Tekrar deneyin.</small>}
+              {error && <small style={{ color: '#ef4444' }}>Invalid password! Please try again.</small>}
               <button 
                 type="submit"
                 style={{
@@ -88,7 +90,7 @@ export default function Home() {
                   cursor: 'pointer'
                 }}
               >
-                Giriş Yap
+                Log In
               </button>
             </form>
           )}
@@ -107,7 +109,7 @@ export default function Home() {
               cursor: 'pointer'
             }}
           >
-            Sürücü Paneli
+            Driver Panel
           </button>
         </div>
       </div>

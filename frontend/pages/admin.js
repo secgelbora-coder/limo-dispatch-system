@@ -35,9 +35,17 @@ export default function AdminPage() {
     alert("New driver added successfully!");
   };
 
-  const sendDriverSMS = (rideId, phone) => {
-    const link = `https://blueprintel.com/driver?rideId=${rideId}`;
-    alert(`SMS Sent to: ${phone}\nTracking Link: ${link}`);
+  // WhatsApp yönlendirme fonksiyonu
+  const sendDriverWhatsApp = (rideId, phone) => {
+    // Telefon numarasındaki boşluk ve özel karakterleri temizle
+    const cleanPhone = phone.replace(/[^0-9]/g, ''); 
+    const trackingLink = `https://blueprintel.com/driver?rideId=${rideId}`;
+    const message = encodeURIComponent(`Hello! Here is your driver tracking link for Ride #${rideId}: ${trackingLink}`);
+    
+    // WhatsApp URL'sini oluştur ve yeni sekmede aç
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+  };
   };
 
   return (

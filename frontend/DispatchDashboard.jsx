@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
+// Company and Contact Details
 export const COMPANY_DETAILS = {
   companyName: "Blueprintel",
   contactPerson: "Bora Secgel",
@@ -7,39 +8,54 @@ export const COMPANY_DETAILS = {
   phone: "561-601-8721"
 };
 
-export const DispatchDashboard = () => {
-  const [statusMessage, setStatusMessage] = useState("");
+export const DriverView = ({ bookingData }) => {
+  const [userLocation, setUserLocation] = useState(null);
 
-  const sendDriverSMS = (driverPhone) => {
-    // Generate a random token for driver link
-    const token = Math.random().toString(36).substring(2, 10);
-    const trackingLink = `https://blueprintel.com/track/${token}`;
-    
-    // Simulated SMS dispatch
-    setStatusMessage(`SMS link sent to ${driverPhone || COMPANY_DETAILS.phone}: ${trackingLink}`);
-    alert(`SMS successfully sent!\nLink: ${trackingLink}`);
+  // Run geolocation check strictly on the client side to avoid SSR build errors
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.warn("Geolocation access denied or unavailable:", error.message);
+        }
+      );
+    }
+  }, []);
+
+  const activeBooking = bookingData || {
+    bookingId: "BP-9082",
+    clientName: "Private Client",
+    pickupAddress: "Fort Lauderdale Airport (FLL)",
+    dropoffAddress: COMPANY_DETAILS.address,
+    contactPhone: COMPANY_DETAILS.phone,
+    providerCompany: COMPANY_DETAILS.companyName
   };
 
   return (
-    <div className="dispatch-container" style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h2>{COMPANY_DETAILS.companyName} - Dispatch Management Panel</h2>
-      <div className="company-info-card" style={{ border: '1px solid #ccc', padding: '15px', marginBottom: '20px' }}>
-        <h3>Company & Contact Details</h3>
-        <p><strong>Manager:</strong> {COMPANY_DETAILS.contactPerson}</p>
-        <p><strong>Address:</strong> {COMPANY_DETAILS.address}</p>
-        <p><strong>Phone:</strong> {COMPANY_DETAILS.phone}</p>
+    <div className="driver-view-card" style={{ border: '1px solid #ddd', padding: '20px', borderRadius: '8px', fontFamily: 'Arial, sans-serif' }}>
+      <h3>{activeBooking.providerCompany} - Driver Assignment Panel</h3>
+      <hr />
+      <div className="booking-details">
+        <p><strong>Booking ID:</strong> {activeBooking.bookingId}</p>
+        <p><strong>Passenger Name:</strong> {activeBooking.clientName}</p>
+        <p><strong>Pickup Location:</strong> {activeBooking.pickupAddress}</p>
+        <p><strong>Destination:</strong> {activeBooking.dropoffAddress}</p>
+        <p><strong>Dispatch Contact:</strong> {activeBooking.contactPhone}</p>
       </div>
 
-      <div className="action-panel">
-        <button 
-          onClick={() => sendDriverSMS(COMPANY_DETAILS.phone)}
-          style={{ padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-        >
-          Send SMS Link
-        </button>
-      </div>
-
-      {statusMessage && <p style={{ marginTop: '15px', color: 'green' }}>{statusMessage}</p>}
+      {userLocation && (
+        <div className="location-status" style={{ marginTop: '15px', color: '#28a745' }}>
+          <small>Current Position: {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}</small>
+        </div>
+      )}
     </div>
   );
 };
+
+export default DriverView;

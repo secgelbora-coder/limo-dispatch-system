@@ -13,8 +13,18 @@ export default function DriverPage() {
   const [rideStatus, setRideStatus] = useState('Assigned');
   const [rideId, setRideId] = useState('BP-1001');
   const [locationStatus, setLocationStatus] = useState('Location Tracking Off');
+  const [isDirectAccess, setIsDirectAccess] = useState(false); // Admin/Seçim modunda mı açıldı?
 
-  // Örnek Müşteri ve İş Bilgileri (İleride Veritabanından Dinamik Gelecek)
+  // Sistemdeki Kayıtlı Sürücüler Listesi (Admin Seçimi İçin)
+  const [drivers] = useState([
+    { id: '1', name: 'Bora Secgel', rideId: 'BP-1001' },
+    { id: '2', name: 'Alex Smith', rideId: 'BP-1002' },
+    { id: '3', name: 'Michael Jordan', rideId: 'BP-1003' }
+  ]);
+
+  const [selectedDriverId, setSelectedDriverId] = useState('1');
+
+  // Örnek Müşteri ve İş Bilgileri
   const [rideDetails, setRideDetails] = useState({
     customerName: "John Doe",
     affiliateCompany: "A1 Limo Corp",
@@ -25,14 +35,32 @@ export default function DriverPage() {
     notes: "VIP Client, needs child seat"
   });
 
-  // URL'den Ride ID Çekme
+  // URL Kontrolü: Linkte rideId var mı yoksa doğrudan mı girildi?
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const currentRideId = params.get('rideId');
-      if (currentRideId) setRideId(currentRideId);
+
+      if (currentRideId) {
+        // WhatsApp'tan özel linkle gelindi -> Sadece kendi işini görsün
+        setRideId(currentRideId);
+        setIsDirectAccess(false);
+      } else {
+        // Doğrudan /driver adresine girildi -> Seçim menüsü aktif olsun
+        setIsDirectAccess(true);
+      }
     }
   }, []);
+
+  // Admin sürücü seçtiğinde ilgili Ride ID'yi değiştirme
+  const handleDriverChange = (e) => {
+    const driverId = e.target.value;
+    setSelectedDriverId(driverId);
+    const driver = drivers.find(d => d.id === driverId);
+    if (driver) {
+      setRideId(driver.rideId);
+    }
+  };
 
   // Canlı Konum Takip Döngüsü (HTML5 Geolocation -> Firebase REST API)
   useEffect(() => {
@@ -77,17 +105,35 @@ export default function DriverPage() {
     };
   }, [rideStatus, rideId]);
 
-  // Cihazın Kendi Haritasında Navigasyon / Yol Tarifi Açma
   const openDirections = (address) => {
     if (!address) return;
     const encodedAddress = encodeURIComponent(address);
-    // Google Maps Universal Link (Hem iOS hem Android cihazlarda haritayı açar)
-    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`;
-    window.open(mapsUrl, '_blank');
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`, '_blank');
   };
 
   return (
     <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
+      
+      {/* SADECE DOĞRUDAN GİRİŞTE (ADMIN MODU) GÖRÜNEN SÜRÜCÜ SEÇİM MENÜSÜ */}
+      {isDirectAccess && (
+        <div style={{ backgroundColor: '#1e293b', color: '#fff', padding: '12px 15px', borderRadius: '10px', marginBottom: '15px' }}>
+          <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '5px', textTransform: 'uppercase', color: '#94a3b8' }}>
+            👑 Admin View - Select Driver Console:
+          </label>
+          <select 
+            value={selectedDriverId} 
+            onChange={handleDriverChange}
+            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: 'none', fontWeight: 'bold', fontSize: '14px', backgroundColor: '#334155', color: '#fff' }}
+          >
+            {drivers.map(d => (
+              <option key={d.id} value={d.id}>
+                {d.name} ({d.rideId})
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
       <div style={{ border: '1px solid #ddd', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', backgroundColor: '#fff' }}>
         
         {/* ÜST BAŞLIK */}
@@ -99,11 +145,9 @@ export default function DriverPage() {
         {/* MÜŞTERİ BİLGİLERİ */}
         <div style={{ backgroundColor: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '15px' }}>
           <h4 style={{ margin: '0 0 10px 0', color: '#0f172a', fontSize: '14px', textTransform: 'uppercase' }}>Passenger Details</h4>
-          
           <p style={{ margin: '5px 0', fontSize: '15px' }}><strong>Name:</strong> {rideDetails.customerName}</p>
           <p style={{ margin: '5px 0', fontSize: '14px', color: '#64748b' }}><strong>Company:</strong> {rideDetails.affiliateCompany}</p>
           
-          {/* Müşteriyi Arama Butonu */}
           <div style={{ marginTop: '10px' }}>
             <a 
               href={`tel:${rideDetails.customerPhone}`} 
@@ -117,7 +161,7 @@ export default function DriverPage() {
         {/* LOKASYONLAR VE YOL TARİFİ BUTONLARI */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '15px' }}>
           
-          {/* PICK-UP ADDRESS */}
+          {/* PICK-UP */}
           <div style={{ border: '1px solid #e2e8f0', padding: '12px', borderRadius: '8px', backgroundColor: '#f1f5f9' }}>
             <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#2563eb', marginBottom: '4px' }}>PICK-UP LOCATION</div>
             <div style={{ fontSize: '14px', color: '#1e293b', marginBottom: '8px' }}>{rideDetails.pickupAddress}</div>
@@ -129,7 +173,7 @@ export default function DriverPage() {
             </button>
           </div>
 
-          {/* DROP-OFF ADDRESS */}
+          {/* DROP-OFF */}
           <div style={{ border: '1px solid #e2e8f0', padding: '12px', borderRadius: '8px', backgroundColor: '#f1f5f9' }}>
             <div style={{ fontSize: '12px', fontWeight: 'bold', color: '#059669', marginBottom: '4px' }}>DROP-OFF LOCATION</div>
             <div style={{ fontSize: '14px', color: '#1e293b', marginBottom: '8px' }}>{rideDetails.dropoffAddress}</div>

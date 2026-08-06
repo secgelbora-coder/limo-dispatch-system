@@ -13,9 +13,9 @@ export default function DriverPage() {
   const [rideStatus, setRideStatus] = useState('Assigned');
   const [rideId, setRideId] = useState('BP-1001');
   const [locationStatus, setLocationStatus] = useState('Location Tracking Off');
-  const [isDirectAccess, setIsDirectAccess] = useState(false); // Admin/Seçim modunda mı açıldı?
+  const [isDirectAccess, setIsDirectAccess] = useState(false);
 
-  // Sistemdeki Kayıtlı Sürücüler Listesi (Admin Seçimi İçin)
+  // Kayıtlı Sürücüler Listesi (Admin Seçimi İçin)
   const [drivers] = useState([
     { id: '1', name: 'Bora Secgel', rideId: 'BP-1001' },
     { id: '2', name: 'Alex Smith', rideId: 'BP-1002' },
@@ -24,8 +24,8 @@ export default function DriverPage() {
 
   const [selectedDriverId, setSelectedDriverId] = useState('1');
 
-  // Örnek Müşteri ve İş Bilgileri
-  const [rideDetails, setRideDetails] = useState({
+  // Müşteri ve İş Bilgileri
+  const [rideDetails] = useState({
     customerName: "John Doe",
     affiliateCompany: "A1 Limo Corp",
     customerPhone: "561-555-0199",
@@ -35,24 +35,21 @@ export default function DriverPage() {
     notes: "VIP Client, needs child seat"
   });
 
-  // URL Kontrolü: Linkte rideId var mı yoksa doğrudan mı girildi?
+  // URL Kontrolü
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const currentRideId = params.get('rideId');
 
       if (currentRideId) {
-        // WhatsApp'tan özel linkle gelindi -> Sadece kendi işini görsün
         setRideId(currentRideId);
         setIsDirectAccess(false);
       } else {
-        // Doğrudan /driver adresine girildi -> Seçim menüsü aktif olsun
         setIsDirectAccess(true);
       }
     }
   }, []);
 
-  // Admin sürücü seçtiğinde ilgili Ride ID'yi değiştirme
   const handleDriverChange = (e) => {
     const driverId = e.target.value;
     setSelectedDriverId(driverId);
@@ -62,12 +59,12 @@ export default function DriverPage() {
     }
   };
 
-  // Canlı Konum Takip Döngüsü (HTML5 Geolocation -> Firebase REST API)
+  // Canlı Konum Takip Döngüsü (OTW, On Location ve POB durumlarında konum yayınlanır)
   useEffect(() => {
     let intervalId = null;
 
-    if (rideStatus === 'OTW' || rideStatus === 'On Location') {
-      setLocationStatus('Sharing Live Location 📍');
+    if (rideStatus === 'OTW' || rideStatus === 'On Location' || rideStatus === 'POB') {
+      setLocationStatus(`Sharing Live Location 📍 (${rideStatus})`);
 
       const sendLocation = () => {
         if ('geolocation' in navigator) {
@@ -97,7 +94,7 @@ export default function DriverPage() {
       sendLocation();
       intervalId = setInterval(sendLocation, 15000);
     } else {
-      setLocationStatus(rideStatus === 'Done' ? 'Ride Completed - Tracking Stopped' : 'Location Tracking Off');
+      setLocationStatus(rideStatus === 'Drop Off' || rideStatus === 'Done' ? 'Ride Completed - Tracking Stopped' : 'Location Tracking Off');
     }
 
     return () => {
@@ -114,7 +111,7 @@ export default function DriverPage() {
   return (
     <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
       
-      {/* SADECE DOĞRUDAN GİRİŞTE (ADMIN MODU) GÖRÜNEN SÜRÜCÜ SEÇİM MENÜSÜ */}
+      {/* ADMIN SEÇİM MENÜSÜ */}
       {isDirectAccess && (
         <div style={{ backgroundColor: '#1e293b', color: '#fff', padding: '12px 15px', borderRadius: '10px', marginBottom: '15px' }}>
           <label style={{ fontSize: '12px', fontWeight: 'bold', display: 'block', marginBottom: '5px', textTransform: 'uppercase', color: '#94a3b8' }}>
@@ -196,11 +193,11 @@ export default function DriverPage() {
         {/* GPS DURUMU */}
         <div style={{ borderTop: '1px solid #eee', paddingTop: '10px', marginBottom: '15px' }}>
           <p style={{ fontSize: '12px', color: '#64748b', margin: 0 }}>
-            <strong>GPS Live Tracking:</strong> <span style={{ color: rideStatus === 'Done' ? '#16a34a' : '#2563eb', fontWeight: 'bold' }}>{locationStatus}</span>
+            <strong>GPS Live Tracking:</strong> <span style={{ color: (rideStatus === 'Drop Off' || rideStatus === 'Done') ? '#16a34a' : '#2563eb', fontWeight: 'bold' }}>{locationStatus}</span>
           </p>
         </div>
 
-        {/* DURUM GÜNCELLEME BUTONLARI */}
+        {/* YENİ DURUM GÜNCELLEME BUTONLARI */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <button 
             onClick={() => setRideStatus('OTW')}
@@ -217,10 +214,17 @@ export default function DriverPage() {
           </button>
 
           <button 
-            onClick={() => setRideStatus('Done')}
-            style={{ padding: '12px', backgroundColor: rideStatus === 'Done' ? '#15803d' : '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}
+            onClick={() => setRideStatus('POB')}
+            style={{ padding: '12px', backgroundColor: rideStatus === 'POB' ? '#7c3aed' : '#8b5cf6', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}
           >
-            Done
+            POB (Passenger On Board)
+          </button>
+
+          <button 
+            onClick={() => setRideStatus('Drop Off')}
+            style={{ padding: '12px', backgroundColor: (rideStatus === 'Drop Off' || rideStatus === 'Done') ? '#15803d' : '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}
+          >
+            Drop Off
           </button>
         </div>
 

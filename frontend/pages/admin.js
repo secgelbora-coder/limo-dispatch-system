@@ -46,7 +46,6 @@ export default function AdminPage() {
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${message}`;
     window.open(whatsappUrl, '_blank');
   };
-  };
 
   return (
     <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>

@@ -58,7 +58,7 @@ export default function HomePage() {
                 cursor: 'pointer'
               }}
             >
-              Admin Paneli
+              Admin Panel
             </button>
           ) : (
             <form onSubmit={handleAdminAccess} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -90,7 +90,7 @@ export default function HomePage() {
                   cursor: 'pointer'
                 }}
               >
-                Giriş Yap
+                Login
               </button>
             </form>
           )}
@@ -109,7 +109,7 @@ export default function HomePage() {
               cursor: 'pointer'
             }}
           >
-            Sürücü Paneli
+            Driver Panel
           </button>
         </div>
       </div>

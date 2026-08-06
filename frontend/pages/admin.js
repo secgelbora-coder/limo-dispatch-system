@@ -170,23 +170,24 @@ export default function AdminPage() {
   }, [driverLocation, activeTrackingRide]);
 
   // SÜRÜCÜ EKLEME
-  const handleAddDriver = (e) => {
-    e.preventDefault();
-    if (!newDriverName || !newDriverPhone) return;
+const handleAddDriver = (e) => {
+  e.preventDefault();
+  if (!newDriverName || !newDriverPhone) return;
 
-    const driverId = Date.now().toString();
-    const driverData = { name: newDriverName, phone: newDriverPhone };
+  const driverId = Date.now().toString();
+  const driverData = { name: newDriverName, phone: newDriverPhone };
 
-    fetch(`${FIREBASE_DB_URL}/drivers/${driverId}.json`, {
-      method: 'PUT',
-      body: JSON.stringify(driverData)
-    }).then(() => {
-      setDrivers(prev => [...prev, { id: driverId, ...driverData }]);
-      setNewDriverName("");
-      setNewDriverPhone("");
-      alert("New driver saved to database!");
-    });
-  };
+  fetch(`${FIREBASE_DB_URL}/drivers/${driverId}.json`, {
+    method: 'PUT',
+    body: JSON.stringify(driverData)
+  }).then(() => {
+    // State'e anında push ederek Assign Driver listesini tazeliyoruz
+    setDrivers(prev => [...prev, { id: driverId, ...driverData }]);
+    setNewDriverName("");
+    setNewDriverPhone("");
+    alert("New driver saved to database!");
+  });
+};
 
   // İŞ OLUŞTURMA
   const handleCreateRide = (e) => {
@@ -292,17 +293,20 @@ ${trackingLink}`;
             <input ref={dropoffInputRef} type="text" placeholder="Start typing drop-off location..." value={newRide.dropoffAddress} onChange={(e) => setNewRide({ ...newRide, dropoffAddress: e.target.value })} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }} />
           </div>
           <div>
-            <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Assign Driver *</label>
-            <select value={newRide.driverId} onChange={(e) => setNewRide({ ...newRide, driverId: e.target.value })} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }}>
-              <option value="">Select Driver</option>
-              {drivers.map(d => (
-                <option key={d.id} value={d.id.toString()}>
-                  {d.name} ({d.phone})
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
+  <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Assign Driver *</label>
+  <select 
+    value={newRide.driverId} 
+    onChange={(e) => setNewRide({ ...newRide, driverId: e.target.value })} 
+    style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }}
+  >
+    <option value="">Select Driver</option>
+    {drivers && drivers.map(d => (
+      <option key={d.id} value={d.id.toString()}>
+        {d.name} ({d.phone})
+      </option>
+    ))}
+  </select>
+</div>
             <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Special Notes / Instructions</label>
             <input type="text" placeholder="Flight #, Luggage, VIP requests..." value={newRide.notes} onChange={(e) => setNewRide({ ...newRide, notes: e.target.value })} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }} />
           </div>

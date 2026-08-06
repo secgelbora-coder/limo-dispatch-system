@@ -110,12 +110,20 @@ export default function AdminPage() {
                   </span>
                 </td>
                 <td style={{ padding: '10px' }}>
-                  <button 
-                    onClick={() => sendDriverSMS(ride.id, ride.driverPhone)}
-                    style={{ padding: '6px 12px', cursor: 'pointer', backgroundColor: '#111', color: '#fff', border: 'none', borderRadius: '4px' }}
-                  >
-                    Send SMS Link
-                  </button>
+                 <button 
+    onClick={() => sendDriverWhatsApp(ride.id, ride.driverPhone)}
+    style={{ 
+      padding: '6px 12px', 
+      cursor: 'pointer', 
+      backgroundColor: '#25D366', // WhatsApp Yeşili
+      color: '#fff', 
+      border: 'none', 
+      borderRadius: '4px',
+      fontWeight: 'bold'
+    }}
+  >
+    Send WhatsApp Message
+  </button>
                 </td>
               </tr>
             ))}

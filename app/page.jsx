@@ -1,56 +1,115 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
-export const COMPANY_DETAILS = {
-  companyName: "Blueprintel",
-  contactPerson: "Bora Secgel",
-  address: "1041 NW 2nd Ave, Fort Lauderdale, FL 33311",
-  phone: "561-601-8721"
-};
+export default function HomePage() {
+  const router = useRouter();
+  const [showPasswordInput, setShowPasswordInput] = useState(false);
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState(false);
 
-export default function DriverPage({ searchParams }) {
-  const rideId = searchParams?.rideId || "BP-1001";
-  const [rideStatus, setRideStatus] = useState('Assigned');
-
-  const updateStatus = (newStatus) => {
-    setRideStatus(newStatus);
+  const handleAdminAccess = (e) => {
+    e.preventDefault();
+    if (password === '1234') {
+      setError(false);
+      router.push('/admin');
+    } else {
+      setError(true);
+    }
   };
 
   return (
-    <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
-      <div style={{ border: '1px solid #ddd', borderRadius: '12px', padding: '20px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)' }}>
-        <h2 style={{ color: '#111', marginBottom: '5px' }}>{COMPANY_DETAILS.companyName}</h2>
-        <p style={{ color: '#666', fontSize: '14px', marginTop: '0' }}>Driver Job Status Panel</p>
-        <hr style={{ border: '0.5px solid #eee', margin: '15px 0' }} />
+    <div style={{ 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      minHeight: '100vh', 
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: '#f4f4f9',
+      padding: '20px'
+    }}>
+      <div style={{
+        backgroundColor: '#ffffff',
+        padding: '40px',
+        borderRadius: '12px',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+        textAlign: 'center',
+        maxWidth: '400px',
+        width: '100%'
+      }}>
+        <h1 style={{ color: '#111', marginBottom: '10px' }}>Blueprintel</h1>
+        <p style={{ color: '#666', marginBottom: '30px' }}>Dispatch & Transport Management</p>
 
-        <div style={{ marginBottom: '15px' }}>
-          <p><strong>Ride ID:</strong> {rideId}</p>
-          <p><strong>Passenger Address:</strong> {COMPANY_DETAILS.address}</p>
-          <p><strong>Dispatch Contact:</strong> {COMPANY_DETAILS.phone}</p>
-          <p><strong>Current Status:</strong> <span style={{ color: '#0070f3', fontWeight: 'bold' }}>{rideStatus}</span></p>
-        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          {!showPasswordInput ? (
+            <button 
+              onClick={() => setShowPasswordInput(true)}
+              style={{
+                width: '100%',
+                padding: '12px',
+                backgroundColor: '#0070f3',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                fontWeight: 'bold',
+                fontSize: '16px',
+                cursor: 'pointer'
+              }}
+            >
+              Admin Paneli
+            </button>
+          ) : (
+            <form onSubmit={handleAdminAccess} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <input 
+                type="password"
+                placeholder="Şifre giriniz"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                style={{
+                  padding: '12px',
+                  borderRadius: '8px',
+                  border: error ? '2px solid #ef4444' : '1px solid #ccc',
+                  outline: 'none',
+                  fontSize: '16px',
+                  textAlign: 'center'
+                }}
+              />
+              {error && <small style={{ color: '#ef4444' }}>Hatalı şifre! Tekrar deneyin.</small>}
+              <button 
+                type="submit"
+                style={{
+                  padding: '12px',
+                  backgroundColor: '#22c55e',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '16px',
+                  cursor: 'pointer'
+                }}
+              >
+                Giriş Yap
+              </button>
+            </form>
+          )}
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>
           <button 
-            onClick={() => updateStatus('OTW')}
-            style={{ padding: '12px', backgroundColor: rideStatus === 'OTW' ? '#0051a8' : '#0070f3', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
+            onClick={() => router.push('/driver')}
+            style={{
+              width: '100%',
+              padding: '12px',
+              backgroundColor: '#111111',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              fontSize: '16px',
+              cursor: 'pointer'
+            }}
           >
-            OTW (On The Way)
-          </button>
-
-          <button 
-            onClick={() => updateStatus('On Location')}
-            style={{ padding: '12px', backgroundColor: rideStatus === 'On Location' ? '#d97706' : '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-          >
-            On Location
-          </button>
-
-          <button 
-            onClick={() => updateStatus('Done')}
-            style={{ padding: '12px', backgroundColor: rideStatus === 'Done' ? '#15803d' : '#22c55e', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}
-          >
-            Done
+            Sürücü Paneli
           </button>
         </div>
       </div>

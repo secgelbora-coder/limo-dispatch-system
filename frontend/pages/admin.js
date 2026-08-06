@@ -45,10 +45,13 @@ export default function AdminPage() {
         .then(res => res.json())
         .then(data => {
           if (data) {
-            const driverList = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            const driverList = Object.keys(data).map(key => ({
+              id: key,
+              name: data[key].name,
+              phone: data[key].phone
+            }));
             setDrivers(driverList);
           } else {
-            // Varsayılan sürücü ekle
             const defaultDriver = { name: "Bora Secgel", phone: "561-601-8721" };
             fetch(`${FIREBASE_DB_URL}/drivers/1.json`, { method: 'PUT', body: JSON.stringify(defaultDriver) });
             setDrivers([{ id: '1', ...defaultDriver }]);
@@ -61,13 +64,13 @@ export default function AdminPage() {
         .then(data => {
           if (data) {
             const rideList = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-            setRides(rideList.reverse()); // En yeni iş üstte
+            setRides(rideList.reverse());
           }
         }).catch(err => console.error("Rides fetch error:", err));
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 5000); // 5 saniyede bir verileri tazele
+    const interval = setInterval(fetchData, 5000);
     return () => clearInterval(interval);
   }, []);
 
@@ -166,7 +169,7 @@ export default function AdminPage() {
     }
   }, [driverLocation, activeTrackingRide]);
 
-  // SÜRÜCÜ EKLEME (FIREBASE'E KAYDET)
+  // SÜRÜCÜ EKLEME
   const handleAddDriver = (e) => {
     e.preventDefault();
     if (!newDriverName || !newDriverPhone) return;
@@ -178,14 +181,14 @@ export default function AdminPage() {
       method: 'PUT',
       body: JSON.stringify(driverData)
     }).then(() => {
-      setDrivers([...drivers, { id: driverId, ...driverData }]);
+      setDrivers(prev => [...prev, { id: driverId, ...driverData }]);
       setNewDriverName("");
       setNewDriverPhone("");
       alert("New driver saved to database!");
     });
   };
 
-  // İŞ OLUŞTURMA (FIREBASE'E KAYDET)
+  // İŞ OLUŞTURMA
   const handleCreateRide = (e) => {
     e.preventDefault();
     if (!newRide.customerName || !newRide.pickupAddress || !newRide.driverId) {
@@ -216,7 +219,7 @@ export default function AdminPage() {
     }).then(() => {
       setRides([{ id: rideId, ...createdRide }, ...rides]);
       setNewRide({ customerName: "", affiliateCompany: "", customerPhone: "", pickupAddress: "", dropoffAddress: "", serviceType: "Transfer", notes: "", driverId: "" });
-      alert(`Job #${rideId} dispatches and saved to database!`);
+      alert(`Job #${rideId} dispatched and saved to database!`);
     });
   };
 
@@ -292,7 +295,11 @@ ${trackingLink}`;
             <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Assign Driver *</label>
             <select value={newRide.driverId} onChange={(e) => setNewRide({ ...newRide, driverId: e.target.value })} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }}>
               <option value="">Select Driver</option>
-              {drivers.map(d => (<option key={d.id} value={d.id}>{d.name} ({d.phone})</option>))}
+              {drivers.map(d => (
+                <option key={d.id} value={d.id.toString()}>
+                  {d.name} ({d.phone})
+                </option>
+              ))}
             </select>
           </div>
           <div>

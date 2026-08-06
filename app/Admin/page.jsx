@@ -9,8 +9,7 @@ export const COMPANY_DETAILS = {
   phone: "561-601-8721"
 };
 
-export const AdminDashboard = () => {
-  // Sürücüler ve Yolculuklar Listesi
+export default function AdminPage() {
   const [drivers, setDrivers] = useState([
     { id: 1, name: "Bora Secgel", phone: "561-601-8721" }
   ]);
@@ -19,7 +18,6 @@ export const AdminDashboard = () => {
     { id: "BP-1001", passenger: "John Doe", driver: "Bora Secgel", driverPhone: "561-601-8721", status: "Assigned" }
   ]);
 
-  // Yeni Sürücü Ekleme State'leri
   const [newDriverName, setNewDriverName] = useState("");
   const [newDriverPhone, setNewDriverPhone] = useState("");
 
@@ -36,12 +34,12 @@ export const AdminDashboard = () => {
     setDrivers([...drivers, newDriver]);
     setNewDriverName("");
     setNewDriverPhone("");
-    alert("New driver added successfully!");
+    alert("Yeni sürücü eklendi!");
   };
 
   const sendDriverSMS = (rideId, phone) => {
     const link = `https://blueprintel.com/driver?rideId=${rideId}`;
-    alert(`SMS sent to ${phone}!\nTracking Link: ${link}`);
+    alert(`SMS gönderildi: ${phone}\nTakip Linki: ${link}`);
   };
 
   return (
@@ -50,20 +48,19 @@ export const AdminDashboard = () => {
       <p><strong>Manager:</strong> {COMPANY_DETAILS.contactPerson} | <strong>Phone:</strong> {COMPANY_DETAILS.phone}</p>
       <hr style={{ margin: '20px 0' }} />
 
-      {/* ADMIN EXCLUSIVE: Add New Driver Section */}
       <div style={{ backgroundColor: '#f9f9f9', border: '1px solid #e0e0e0', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-        <h3>[Admin Action] Add New Driver</h3>
+        <h3>Yeni Sürücü Ekle</h3>
         <form onSubmit={handleAddDriver} style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
           <input 
             type="text" 
-            placeholder="Driver Name" 
+            placeholder="Sürücü Adı" 
             value={newDriverName} 
             onChange={(e) => setNewDriverName(e.target.value)}
             style={{ padding: '10px', flex: '1', borderRadius: '4px', border: '1px solid #ccc' }}
           />
           <input 
             type="text" 
-            placeholder="Phone Number" 
+            placeholder="Telefon Numarası" 
             value={newDriverPhone} 
             onChange={(e) => setNewDriverPhone(e.target.value)}
             style={{ padding: '10px', flex: '1', borderRadius: '4px', border: '1px solid #ccc' }}
@@ -72,22 +69,21 @@ export const AdminDashboard = () => {
             type="submit" 
             style={{ padding: '10px 20px', backgroundColor: '#0070f3', color: '#fff', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
           >
-            Add Driver
+            Ekle
           </button>
         </form>
       </div>
 
-      {/* Live Rides & Dispatch Section */}
       <div style={{ border: '1px solid #ccc', borderRadius: '8px', padding: '20px' }}>
-        <h3>Live Dispatch & Ride Monitor</h3>
+        <h3>Canlı Sürücü & Rota Takibi</h3>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', marginTop: '15px' }}>
           <thead>
             <tr style={{ borderBottom: '2px solid #ddd' }}>
               <th style={{ padding: '10px' }}>Ride ID</th>
-              <th style={{ padding: '10px' }}>Passenger</th>
-              <th style={{ padding: '10px' }}>Assigned Driver</th>
-              <th style={{ padding: '10px' }}>Status</th>
-              <th style={{ padding: '10px' }}>Action</th>
+              <th style={{ padding: '10px' }}>Yolcu</th>
+              <th style={{ padding: '10px' }}>Atanan Sürücü</th>
+              <th style={{ padding: '10px' }}>Durum</th>
+              <th style={{ padding: '10px' }}>İşlem</th>
             </tr>
           </thead>
           <tbody>
@@ -113,7 +109,7 @@ export const AdminDashboard = () => {
                     onClick={() => sendDriverSMS(ride.id, ride.driverPhone)}
                     style={{ padding: '6px 12px', cursor: 'pointer', backgroundColor: '#111', color: '#fff', border: 'none', borderRadius: '4px' }}
                   >
-                    Send SMS Link
+                    SMS Link Gönder
                   </button>
                 </td>
               </tr>
@@ -123,6 +119,4 @@ export const AdminDashboard = () => {
       </div>
     </div>
   );
-};
-
-export default AdminDashboard;
+}

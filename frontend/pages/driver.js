@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export const COMPANY_DETAILS = {
   companyName: "Blueprintel",
@@ -7,8 +7,65 @@ export const COMPANY_DETAILS = {
   phone: "561-601-8721"
 };
 
+const FIREBASE_DB_URL = "https://blueprintle-default-rtdb.firebaseio.com"; // Realtime DB URL
+
 export default function DriverPage() {
   const [rideStatus, setRideStatus] = useState('Assigned');
+  const [rideId, setRideId] = useState('BP-1001');
+  const [locationStatus, setLocationStatus] = useState('Location Tracking Off');
+
+  // URL'den Ride ID çekme
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const currentRideId = params.get('rideId');
+      if (currentRideId) setRideId(currentRideId);
+    }
+  }, []);
+
+  // Canlı Konum Takip Döngüsü (HTML5 Geolocation -> Firebase REST API)
+  useEffect(() => {
+    let intervalId = null;
+
+    if (rideStatus === 'OTW' || rideStatus === 'On Location') {
+      setLocationStatus('Sharing Live Location 📍');
+
+      const sendLocation = () => {
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const { latitude, longitude } = position.coords;
+              
+              // Firebase Realtime DB'ye konum yazma
+              fetch(`${FIREBASE_DB_URL}/active_locations/${rideId}.json`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                  lat: latitude,
+                  lng: longitude,
+                  status: rideStatus,
+                  updatedAt: new Date().toISOString()
+                })
+              }).catch(err => console.error("Location send error:", err));
+            },
+            (error) => {
+              console.error("GPS Error:", error);
+              setLocationStatus('GPS Access Denied');
+            },
+            { enableHighAccuracy: true }
+          );
+        }
+      };
+
+      sendLocation(); // İlk konumu anında gönder
+      intervalId = setInterval(sendLocation, 15000); // Her 15 saniyede bir güncelle
+    } else {
+      setLocationStatus(rideStatus === 'Done' ? 'Ride Completed - Tracking Stopped' : 'Location Tracking Off');
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [rideStatus, rideId]);
 
   return (
     <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto', fontFamily: 'Arial, sans-serif' }}>
@@ -18,9 +75,13 @@ export default function DriverPage() {
         <hr style={{ border: '0.5px solid #eee', margin: '15px 0' }} />
 
         <div style={{ marginBottom: '15px' }}>
+          <p><strong>Ride ID:</strong> #{rideId}</p>
           <p><strong>Passenger Address:</strong> {COMPANY_DETAILS.address}</p>
           <p><strong>Dispatch Contact:</strong> {COMPANY_DETAILS.phone}</p>
           <p><strong>Current Status:</strong> <span style={{ color: '#0070f3', fontWeight: 'bold' }}>{rideStatus}</span></p>
+          <p style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+            <strong>GPS Status:</strong> <span style={{ color: rideStatus === 'Done' ? '#22c55e' : '#0070f3' }}>{locationStatus}</span>
+          </p>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '20px' }}>

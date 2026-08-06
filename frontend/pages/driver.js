@@ -15,27 +15,20 @@ export default function DriverPage() {
   const [locationStatus, setLocationStatus] = useState('Location Tracking Off');
   const [isDirectAccess, setIsDirectAccess] = useState(false);
 
-  // Kayıtlı Sürücüler Listesi (Admin Seçimi İçin)
-  const [drivers] = useState([
-    { id: '1', name: 'Bora Secgel', rideId: 'BP-1001' },
-    { id: '2', name: 'Alex Smith', rideId: 'BP-1002' },
-    { id: '3', name: 'Michael Jordan', rideId: 'BP-1003' }
-  ]);
+  const [drivers, setDrivers] = useState([]);
+  const [selectedDriverId, setSelectedDriverId] = useState('');
 
-  const [selectedDriverId, setSelectedDriverId] = useState('1');
-
-  // Müşteri ve İş Bilgileri
-  const [rideDetails] = useState({
-    customerName: "John Doe",
-    affiliateCompany: "A1 Limo Corp",
-    customerPhone: "561-555-0199",
-    pickupAddress: "Fort Lauderdale Airport (FLL)",
-    dropoffAddress: "1041 NW 2nd Ave, Fort Lauderdale, FL 33311",
+  const [rideDetails, setRideDetails] = useState({
+    customerName: "Loading...",
+    affiliateCompany: "Loading...",
+    customerPhone: "",
+    pickupAddress: "Loading...",
+    dropoffAddress: "Loading...",
     serviceType: "Transfer",
-    notes: "VIP Client, needs child seat"
+    notes: ""
   });
 
-  // URL Kontrolü
+  // URL Kontrolü & Sürücü Listesini Çekme
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -48,18 +41,48 @@ export default function DriverPage() {
         setIsDirectAccess(true);
       }
     }
+
+    // Firebase'den sürücüleri çek
+    fetch(`${FIREBASE_DB_URL}/drivers.json`)
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          const list = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+          setDrivers(list);
+          if (list.length > 0) setSelectedDriverId(list[0].id);
+        }
+      });
   }, []);
+
+  // Firebase'den Özel İş Detaylarını Çekme
+  useEffect(() => {
+    if (rideId) {
+      fetch(`${FIREBASE_DB_URL}/rides/${rideId}.json`)
+        .then(res => res.json())
+        .then(data => {
+          if (data) {
+            setRideDetails(data);
+            if (data.status) setRideStatus(data.status);
+          }
+        });
+    }
+  }, [rideId]);
 
   const handleDriverChange = (e) => {
     const driverId = e.target.value;
     setSelectedDriverId(driverId);
-    const driver = drivers.find(d => d.id === driverId);
-    if (driver) {
-      setRideId(driver.rideId);
-    }
   };
 
-  // Canlı Konum Takip Döngüsü (OTW, On Location ve POB durumlarında konum yayınlanır)
+  // Status Değiştiğinde Firebase'e Yazma
+  const updateStatus = (newStatus) => {
+    setRideStatus(newStatus);
+    fetch(`${FIREBASE_DB_URL}/rides/${rideId}/status.json`, {
+      method: 'PUT',
+      body: JSON.stringify(newStatus)
+    });
+  };
+
+  // Canlı Konum Takip Döngüsü
   useEffect(() => {
     let intervalId = null;
 
@@ -124,7 +147,7 @@ export default function DriverPage() {
           >
             {drivers.map(d => (
               <option key={d.id} value={d.id}>
-                {d.name} ({d.rideId})
+                {d.name} ({d.phone})
               </option>
             ))}
           </select>
@@ -145,14 +168,16 @@ export default function DriverPage() {
           <p style={{ margin: '5px 0', fontSize: '15px' }}><strong>Name:</strong> {rideDetails.customerName}</p>
           <p style={{ margin: '5px 0', fontSize: '14px', color: '#64748b' }}><strong>Company:</strong> {rideDetails.affiliateCompany}</p>
           
-          <div style={{ marginTop: '10px' }}>
-            <a 
-              href={`tel:${rideDetails.customerPhone}`} 
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', backgroundColor: '#0284c7', color: '#fff', padding: '8px 12px', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', fontSize: '13px' }}
-            >
-              📞 Call Passenger ({rideDetails.customerPhone})
-            </a>
-          </div>
+          {rideDetails.customerPhone && (
+            <div style={{ marginTop: '10px' }}>
+              <a 
+                href={`tel:${rideDetails.customerPhone}`} 
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', backgroundColor: '#0284c7', color: '#fff', padding: '8px 12px', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', fontSize: '13px' }}
+              >
+                📞 Call Passenger ({rideDetails.customerPhone})
+              </a>
+            </div>
+          )}
         </div>
 
         {/* LOKASYONLAR VE YOL TARİFİ BUTONLARI */}
@@ -197,31 +222,31 @@ export default function DriverPage() {
           </p>
         </div>
 
-        {/* YENİ DURUM GÜNCELLEME BUTONLARI */}
+        {/* DURUM GÜNCELLEME BUTONLARI */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <button 
-            onClick={() => setRideStatus('OTW')}
+            onClick={() => updateStatus('OTW')}
             style={{ padding: '12px', backgroundColor: rideStatus === 'OTW' ? '#1d4ed8' : '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}
           >
             OTW (On The Way)
           </button>
 
           <button 
-            onClick={() => setRideStatus('On Location')}
+            onClick={() => updateStatus('On Location')}
             style={{ padding: '12px', backgroundColor: rideStatus === 'On Location' ? '#d97706' : '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}
           >
             On Location
           </button>
 
           <button 
-            onClick={() => setRideStatus('POB')}
+            onClick={() => updateStatus('POB')}
             style={{ padding: '12px', backgroundColor: rideStatus === 'POB' ? '#7c3aed' : '#8b5cf6', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}
           >
             POB (Passenger On Board)
           </button>
 
           <button 
-            onClick={() => setRideStatus('Drop Off')}
+            onClick={() => updateStatus('Drop Off')}
             style={{ padding: '12px', backgroundColor: (rideStatus === 'Drop Off' || rideStatus === 'Done') ? '#15803d' : '#16a34a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}
           >
             Drop Off

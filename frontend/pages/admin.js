@@ -17,25 +17,8 @@ export default function AdminPage() {
   const googleMapInstance = useRef(null);
   const driverMarkerRef = useRef(null);
 
-  const [drivers, setDrivers] = useState([
-    { id: 1, name: "Bora Secgel", phone: "561-601-8721" }
-  ]);
-
-  const [rides, setRides] = useState([
-    {
-      id: "BP-1001",
-      customerName: "John Doe",
-      affiliateCompany: "A1 Limo Corp",
-      customerPhone: "561-555-0199",
-      pickupAddress: "Fort Lauderdale Airport (FLL)",
-      dropoffAddress: "1041 NW 2nd Ave, Fort Lauderdale, FL",
-      serviceType: "Transfer",
-      notes: "VIP Client, requires child seat",
-      driver: "Bora Secgel",
-      driverPhone: "561-601-8721",
-      status: "Assigned"
-    }
-  ]);
+  const [drivers, setDrivers] = useState([]);
+  const [rides, setRides] = useState([]);
 
   const [newDriverName, setNewDriverName] = useState("");
   const [newDriverPhone, setNewDriverPhone] = useState("");
@@ -51,11 +34,44 @@ export default function AdminPage() {
     driverId: ""
   });
 
-  // Modal / Live Map State
   const [activeTrackingRide, setActiveTrackingRide] = useState(null);
   const [driverLocation, setDriverLocation] = useState(null);
 
-  // Google Maps Places Autocomplete Entegrasyonu
+  // 1. FIREBASE'DEN SÜRÜCÜLERİ VE İŞLERİ CANLI ÇEKME
+  useEffect(() => {
+    const fetchData = () => {
+      // Sürücüleri Çek
+      fetch(`${FIREBASE_DB_URL}/drivers.json`)
+        .then(res => res.json())
+        .then(data => {
+          if (data) {
+            const driverList = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            setDrivers(driverList);
+          } else {
+            // Varsayılan sürücü ekle
+            const defaultDriver = { name: "Bora Secgel", phone: "561-601-8721" };
+            fetch(`${FIREBASE_DB_URL}/drivers/1.json`, { method: 'PUT', body: JSON.stringify(defaultDriver) });
+            setDrivers([{ id: '1', ...defaultDriver }]);
+          }
+        }).catch(err => console.error("Drivers fetch error:", err));
+
+      // İşleri Çek
+      fetch(`${FIREBASE_DB_URL}/rides.json`)
+        .then(res => res.json())
+        .then(data => {
+          if (data) {
+            const rideList = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+            setRides(rideList.reverse()); // En yeni iş üstte
+          }
+        }).catch(err => console.error("Rides fetch error:", err));
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 5000); // 5 saniyede bir verileri tazele
+    return () => clearInterval(interval);
+  }, []);
+
+  // 2. GOOGLE MAPS AUTOCOMPLETE
   useEffect(() => {
     if (!window.google && !document.getElementById('google-maps-script')) {
       const script = document.createElement('script');
@@ -101,7 +117,7 @@ export default function AdminPage() {
     }
   }, []);
 
-  // Firebase Canlı Konum Dinleyici (Polling)
+  // 3. FIREBASE CANLI KONUM DİNLEYİCİ
   useEffect(() => {
     let intervalId = null;
 
@@ -118,7 +134,7 @@ export default function AdminPage() {
       };
 
       fetchLocation();
-      intervalId = setInterval(fetchLocation, 5000); // 5 saniyede bir haritadaki konumu güncelle
+      intervalId = setInterval(fetchLocation, 5000);
     }
 
     return () => {
@@ -126,7 +142,7 @@ export default function AdminPage() {
     };
   }, [activeTrackingRide]);
 
-  // Haritayı Çizme ve İkonu Hareket Ettirme
+  // 4. HARİTA ÇİZİMİ
   useEffect(() => {
     if (activeTrackingRide && driverLocation && mapRef.current && window.google) {
       const pos = { lat: driverLocation.lat, lng: driverLocation.lng };
@@ -141,7 +157,7 @@ export default function AdminPage() {
           position: pos,
           map: googleMapInstance.current,
           title: activeTrackingRide.driver,
-          icon: 'https://maps.google.com/mapfiles/kml/shapes/cabs.png' // Taksi / Araç İkonu
+          icon: 'https://maps.google.com/mapfiles/kml/shapes/cabs.png'
         });
       } else {
         driverMarkerRef.current.setPosition(pos);
@@ -150,17 +166,26 @@ export default function AdminPage() {
     }
   }, [driverLocation, activeTrackingRide]);
 
+  // SÜRÜCÜ EKLEME (FIREBASE'E KAYDET)
   const handleAddDriver = (e) => {
     e.preventDefault();
     if (!newDriverName || !newDriverPhone) return;
 
-    const newDriver = { id: Date.now(), name: newDriverName, phone: newDriverPhone };
-    setDrivers([...drivers, newDriver]);
-    setNewDriverName("");
-    setNewDriverPhone("");
-    alert("New driver added successfully!");
+    const driverId = Date.now().toString();
+    const driverData = { name: newDriverName, phone: newDriverPhone };
+
+    fetch(`${FIREBASE_DB_URL}/drivers/${driverId}.json`, {
+      method: 'PUT',
+      body: JSON.stringify(driverData)
+    }).then(() => {
+      setDrivers([...drivers, { id: driverId, ...driverData }]);
+      setNewDriverName("");
+      setNewDriverPhone("");
+      alert("New driver saved to database!");
+    });
   };
 
+  // İŞ OLUŞTURMA (FIREBASE'E KAYDET)
   const handleCreateRide = (e) => {
     e.preventDefault();
     if (!newRide.customerName || !newRide.pickupAddress || !newRide.driverId) {
@@ -169,9 +194,9 @@ export default function AdminPage() {
     }
 
     const assignedDriver = drivers.find(d => d.id.toString() === newRide.driverId.toString());
+    const rideId = `BP-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const createdRide = {
-      id: `BP-${Math.floor(1000 + Math.random() * 9000)}`,
       customerName: newRide.customerName,
       affiliateCompany: newRide.affiliateCompany || "N/A",
       customerPhone: newRide.customerPhone || "N/A",
@@ -181,17 +206,23 @@ export default function AdminPage() {
       notes: newRide.notes || "None",
       driver: assignedDriver ? assignedDriver.name : "Unassigned",
       driverPhone: assignedDriver ? assignedDriver.phone : "",
-      status: "Assigned"
+      status: "Assigned",
+      createdAt: new Date().toISOString()
     };
 
-    setRides([createdRide, ...rides]);
-    setNewRide({ customerName: "", affiliateCompany: "", customerPhone: "", pickupAddress: "", dropoffAddress: "", serviceType: "Transfer", notes: "", driverId: "" });
-    alert(`Job #${createdRide.id} created successfully!`);
+    fetch(`${FIREBASE_DB_URL}/rides/${rideId}.json`, {
+      method: 'PUT',
+      body: JSON.stringify(createdRide)
+    }).then(() => {
+      setRides([{ id: rideId, ...createdRide }, ...rides]);
+      setNewRide({ customerName: "", affiliateCompany: "", customerPhone: "", pickupAddress: "", dropoffAddress: "", serviceType: "Transfer", notes: "", driverId: "" });
+      alert(`Job #${rideId} dispatches and saved to database!`);
+    });
   };
 
   const sendDriverWhatsApp = (ride) => {
-    const cleanPhone = ride.driverPhone.replace(/[^0-9]/g, '');
-    const trackingLink = `https://blueprintel.com/driver?rideId=${ride.id}`;
+    const cleanPhone = '1' + ride.driverPhone.replace(/[^0-9]/g, '');
+    const trackingLink = `${window.location.origin}/driver?rideId=${ride.id}`;
 
     const messageText = 
 `🚗 *NEW JOB DISPATCH - #${ride.id}*
@@ -303,7 +334,7 @@ ${trackingLink}`;
                 </td>
                 <td style={{ padding: '10px' }}>{ride.driver}<br/><small style={{ color: '#666' }}>{ride.driverPhone}</small></td>
                 <td style={{ padding: '10px' }}>
-                  <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', color: '#fff', backgroundColor: ride.status === 'Done' ? '#22c55e' : ride.status === 'On Location' ? '#f59e0b' : ride.status === 'OTW' ? '#0070f3' : '#6b7280' }}>
+                  <span style={{ padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold', color: '#fff', backgroundColor: (ride.status === 'Drop Off' || ride.status === 'Done') ? '#22c55e' : ride.status === 'POB' ? '#7c3aed' : ride.status === 'On Location' ? '#f59e0b' : ride.status === 'OTW' ? '#0070f3' : '#6b7280' }}>
                     {ride.status}
                   </span>
                 </td>

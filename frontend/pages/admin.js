@@ -292,21 +292,22 @@ ${trackingLink}`;
             <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Drop-off Address (Google Validated)</label>
             <input ref={dropoffInputRef} type="text" placeholder="Start typing drop-off location..." value={newRide.dropoffAddress} onChange={(e) => setNewRide({ ...newRide, dropoffAddress: e.target.value })} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }} />
           </div>
+<div>
+            <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Assign Driver *</label>
+            <select 
+              value={newRide.driverId} 
+              onChange={(e) => setNewRide({ ...newRide, driverId: e.target.value })} 
+              style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }}
+            >
+              <option value="">Select Driver</option>
+              {drivers && drivers.map(d => (
+                <option key={d.id} value={d.id.toString()}>
+                  {d.name} ({d.phone})
+                </option>
+              ))}
+            </select>
+          </div>
           <div>
-  <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Assign Driver *</label>
-  <select 
-    value={newRide.driverId} 
-    onChange={(e) => setNewRide({ ...newRide, driverId: e.target.value })} 
-    style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }}
-  >
-    <option value="">Select Driver</option>
-    {drivers && drivers.map(d => (
-      <option key={d.id} value={d.id.toString()}>
-        {d.name} ({d.phone})
-      </option>
-    ))}
-  </select>
-</div>
             <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Special Notes / Instructions</label>
             <input type="text" placeholder="Flight #, Luggage, VIP requests..." value={newRide.notes} onChange={(e) => setNewRide({ ...newRide, notes: e.target.value })} style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }} />
           </div>

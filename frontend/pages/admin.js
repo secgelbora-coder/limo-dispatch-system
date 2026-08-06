@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export const COMPANY_DETAILS = {
   companyName: "Blueprintel",
@@ -7,7 +7,12 @@ export const COMPANY_DETAILS = {
   phone: "561-601-8721"
 };
 
+const GOOGLE_MAPS_API_KEY = "AIzaSyBEzBK4p5Yi1jrwe6_0gz8mYAfwrQpYAOs";
+
 export default function AdminPage() {
+  const pickupInputRef = useRef(null);
+  const dropoffInputRef = useRef(null);
+
   const [drivers, setDrivers] = useState([
     { id: 1, name: "Bora Secgel", phone: "561-601-8721" }
   ]);
@@ -28,11 +33,9 @@ export default function AdminPage() {
     }
   ]);
 
-  // State for Adding New Driver
   const [newDriverName, setNewDriverName] = useState("");
   const [newDriverPhone, setNewDriverPhone] = useState("");
 
-  // State for Creating New Ride Job
   const [newRide, setNewRide] = useState({
     customerName: "",
     affiliateCompany: "",
@@ -43,6 +46,52 @@ export default function AdminPage() {
     notes: "",
     driverId: ""
   });
+
+  // Google Maps Places Autocomplete Entegrasyonu
+  useEffect(() => {
+    if (!window.google && !document.getElementById('google-maps-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-maps-script';
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places`;
+      script.async = true;
+      script.onload = initAutocomplete;
+      document.body.appendChild(script);
+    } else if (window.google) {
+      initAutocomplete();
+    }
+
+    function initAutocomplete() {
+      if (!window.google || !window.google.maps || !window.google.maps.places) return;
+
+      if (pickupInputRef.current) {
+        const pickupAutocomplete = new window.google.maps.places.Autocomplete(pickupInputRef.current, {
+          types: ['geocode', 'establishment'],
+          componentRestrictions: { country: 'us' }
+        });
+
+        pickupAutocomplete.addListener('place_changed', () => {
+          const place = pickupAutocomplete.getPlace();
+          if (place && place.formatted_address) {
+            setNewRide(prev => ({ ...prev, pickupAddress: place.formatted_address }));
+          }
+        });
+      }
+
+      if (dropoffInputRef.current) {
+        const dropoffAutocomplete = new window.google.maps.places.Autocomplete(dropoffInputRef.current, {
+          types: ['geocode', 'establishment'],
+          componentRestrictions: { country: 'us' }
+        });
+
+        dropoffAutocomplete.addListener('place_changed', () => {
+          const place = dropoffAutocomplete.getPlace();
+          if (place && place.formatted_address) {
+            setNewRide(prev => ({ ...prev, dropoffAddress: place.formatted_address }));
+          }
+        });
+      }
+    }
+  }, []);
 
   const handleAddDriver = (e) => {
     e.preventDefault();
@@ -85,7 +134,6 @@ export default function AdminPage() {
 
     setRides([createdRide, ...rides]);
     
-    // Reset Form
     setNewRide({
       customerName: "",
       affiliateCompany: "",
@@ -205,10 +253,11 @@ ${trackingLink}`;
           </div>
 
           <div>
-            <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Pick-up Address *</label>
+            <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Pick-up Address * (Google Validated)</label>
             <input 
+              ref={pickupInputRef}
               type="text" 
-              placeholder="Pick-up Location" 
+              placeholder="Start typing pick-up location..." 
               value={newRide.pickupAddress} 
               onChange={(e) => setNewRide({ ...newRide, pickupAddress: e.target.value })}
               style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }}
@@ -216,10 +265,11 @@ ${trackingLink}`;
           </div>
 
           <div>
-            <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Drop-off Address</label>
+            <label style={{ fontSize: '13px', fontWeight: 'bold' }}>Drop-off Address (Google Validated)</label>
             <input 
+              ref={dropoffInputRef}
               type="text" 
-              placeholder="Drop-off Location (or N/A for Hourly)" 
+              placeholder="Start typing drop-off location..." 
               value={newRide.dropoffAddress} 
               onChange={(e) => setNewRide({ ...newRide, dropoffAddress: e.target.value })}
               style={{ width: '100%', padding: '8px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }}
